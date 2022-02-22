@@ -23,6 +23,15 @@ void main() {
       when(_weatherRepository.fetchCurrentWeather('Moscow,ru,Moscow'))
           .thenAnswer((_) => Future.value(CurrentWeatherVO.fromJson(jsonDecode(
               '{"coord":{"lon":-0.1257,"lat":51.5085},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04n"}],"base":"stations","main":{"temp":280.34,"feels_like":275.45,"temp_min":278.87,"temp_max":281.21,"pressure":1000,"humidity":51},"visibility":10000,"wind":{"speed":10.8,"deg":260,"gust":18.52},"clouds":{"all":68},"dt":1645205783,"sys":{"type":2,"id":2019646,"country":"GB","sunrise":1645168144,"sunset":1645204807},"timezone":0,"id":2643743,"name":"Moscow","cod":200}'))));
+      when(_weatherRepository.fetchCurrentWeather('City 2')).thenAnswer((_) =>
+          Future.value(CurrentWeatherVO.fromJson(jsonDecode(
+              '{"coord":{"lon":-0.1257,"lat":51.5085},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04n"}],"base":"stations","main":{"temp":280.34,"feels_like":275.45,"temp_min":278.87,"temp_max":281.21,"pressure":1000,"humidity":51},"visibility":10000,"wind":{"speed":10.8,"deg":260,"gust":18.52},"clouds":{"all":68},"dt":1645205783,"sys":{"type":2,"id":2019646,"country":"GB","sunrise":1645168144,"sunset":1645204807},"timezone":0,"id":2643743,"name":"Moscow","cod":200}'))));
+      when(_weatherRepository.fetchCurrentWeather('City 3')).thenAnswer((_) =>
+          Future.value(CurrentWeatherVO.fromJson(jsonDecode(
+              '{"coord":{"lon":-0.1257,"lat":51.5085},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04n"}],"base":"stations","main":{"temp":280.34,"feels_like":275.45,"temp_min":278.87,"temp_max":281.21,"pressure":1000,"humidity":51},"visibility":10000,"wind":{"speed":10.8,"deg":260,"gust":18.52},"clouds":{"all":68},"dt":1645205783,"sys":{"type":2,"id":2019646,"country":"GB","sunrise":1645168144,"sunset":1645204807},"timezone":0,"id":2643743,"name":"Moscow","cod":200}'))));
+      when(_weatherRepository.fetchCurrentWeather('City 4')).thenAnswer((_) =>
+          Future.value(CurrentWeatherVO.fromJson(jsonDecode(
+              '{"coord":{"lon":-0.1257,"lat":51.5085},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04n"}],"base":"stations","main":{"temp":280.34,"feels_like":275.45,"temp_min":278.87,"temp_max":281.21,"pressure":1000,"humidity":51},"visibility":10000,"wind":{"speed":10.8,"deg":260,"gust":18.52},"clouds":{"all":68},"dt":1645205783,"sys":{"type":2,"id":2019646,"country":"GB","sunrise":1645168144,"sunset":1645204807},"timezone":0,"id":2643743,"name":"Moscow","cod":200}'))));
     });
 
     blocTest<WeatherBloc, WeatherState>(
@@ -61,6 +70,54 @@ void main() {
         verifyZeroInteractions(_weatherRepository);
       },
     );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'Swap cities to up',
+      setUp: () async => _weatherBloc = await _getWeatherBloc(
+          _weatherRepository,
+          storage: _MockStorageWeatherRecentlyUpdated()),
+      build: () => _weatherBloc,
+      act: (bloc) => bloc
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 2', cityName: 'City 2', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 3', cityName: 'City 3', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 4', cityName: 'City 4', index: -1))
+        ..add(const WeatherEventCityMoved(oldIndex: 1, newIndex: 3)),
+      skip: 7,
+      expect: () => [
+        isA<WeatherState>().having(
+            (state) =>
+                state.cities.map((e) => e.fullLocation).toList(growable: false),
+            'Full locations',
+            ['Moscow,ru,Moscow', 'City 3', 'City 2', 'City 4']),
+      ],
+    );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'Swap cities to down',
+      setUp: () async => _weatherBloc = await _getWeatherBloc(
+          _weatherRepository,
+          storage: _MockStorageWeatherRecentlyUpdated()),
+      build: () => _weatherBloc,
+      act: (bloc) => bloc
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 2', cityName: 'City 2', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 3', cityName: 'City 3', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 4', cityName: 'City 4', index: -1))
+        ..add(const WeatherEventCityMoved(oldIndex: 2, newIndex: 1)),
+      skip: 7,
+      expect: () => [
+        isA<WeatherState>().having(
+            (state) =>
+                state.cities.map((e) => e.fullLocation).toList(growable: false),
+            'Full locations',
+            ['Moscow,ru,Moscow', 'City 3', 'City 2', 'City 4']),
+      ],
+    );
   });
 }
 
@@ -74,6 +131,9 @@ class _MockStorageWeatherRecentlyUpdated extends Mock implements Storage {
           .toJson();
     }
   }
+
+  @override
+  Future<void> write(String key, dynamic value) async {}
 }
 
 Future<WeatherBloc> _getWeatherBloc(WeatherRepository weatherRepository,

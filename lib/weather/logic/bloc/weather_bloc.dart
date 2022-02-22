@@ -20,6 +20,7 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
     on<WeatherEventStartup>((event, emit) => _scheduleUpdates());
     on<WeatherEventUpdateRequested>((event, emit) => _weatherUpdate(emit));
     on<WeatherEventCityUpdated>((event, emit) => _cityUpdate(emit, event));
+    on<WeatherEventCityMoved>((event, emit) => _cityMoved(emit, event));
     add(WeatherEventStartup());
   }
 
@@ -98,4 +99,24 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
 
   @override
   Map<String, dynamic>? toJson(WeatherState state) => state.toJson();
+
+  _cityMoved(Emitter<WeatherState> emit, WeatherEventCityMoved event) {
+    print('Moving city from ${event.oldIndex} to ${event.newIndex}');
+
+    // Check if we need index correction due to strange behaviour of the widget
+    var correctedIndex = event.newIndex;
+    if (correctedIndex > event.oldIndex) {
+      correctedIndex--;
+    }
+    emit(state.copyWith(
+        cities: _swapListItems(state.cities, event.oldIndex, correctedIndex)));
+  }
+
+  List<CityWeather> _swapListItems(
+      List<CityWeather> cities, int oldIndex, int newIndex) {
+    final newList = List.of(cities);
+    final element = newList.removeAt(oldIndex);
+    newList.insert(newIndex, element);
+    return newList;
+  }
 }

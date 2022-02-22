@@ -48,13 +48,13 @@ class WeatherScreen extends ColoredStatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: Stack(
         children: [
-          ListView.separated(
+          ReorderableListView.builder(
             padding: const EdgeInsets.all(10.0),
+            onReorder: (int oldIndex, int newIndex) =>
+                _cityMoved(context, oldIndex, newIndex),
+            itemBuilder: (context, index) =>
+                _weatherWidget(context, state, state.cities[index], index),
             itemCount: state.cities.length,
-            itemBuilder: (context, index) => _weatherWidget(
-                context, state, state.cities.elementAt(index), index),
-            separatorBuilder: (BuildContext context, int index) =>
-                const Divider(),
           ),
           Align(
             alignment: Alignment.bottomLeft,
@@ -65,6 +65,13 @@ class WeatherScreen extends ColoredStatelessWidget {
     );
   }
 
+  void _cityMoved(BuildContext context, int oldIndex, int newIndex) {
+    context.read<WeatherBloc>().add(WeatherEventCityMoved(
+          oldIndex: oldIndex,
+          newIndex: newIndex,
+        ));
+  }
+
   Widget _weatherWidget(
     BuildContext context,
     WeatherState state,
@@ -72,6 +79,8 @@ class WeatherScreen extends ColoredStatelessWidget {
     int index,
   ) {
     return Container(
+      key: ObjectKey(index),
+      margin: const EdgeInsets.only(top: 2.0, bottom: 2.0),
       padding: const EdgeInsets.all(8.0),
       color: ColoredStatelessWidget.widgetBgColor,
       child: Column(

@@ -25,3 +25,16 @@ class WeatherEventCityUpdated extends WeatherEvent {
   @override
   List<Object> get props => [fullLocation, cityName, index];
 }
+
+class WeatherEventCityMoved extends WeatherEvent {
+  final int oldIndex;
+  final int newIndex;
+
+  const WeatherEventCityMoved({
+    required this.oldIndex,
+    required this.newIndex,
+  });
+
+  @override
+  List<Object> get props => [oldIndex, newIndex];
+}
