@@ -15,6 +15,7 @@ CityWeather _$CityWeatherFromJson(Map<String, dynamic> json) => CityWeather(
       icon: json['icon'] as String,
       error: json['error'] as String,
       enabled: json['enabled'] as bool? ?? true,
+      selected: json['selected'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$CityWeatherToJson(CityWeather instance) =>
@@ -27,6 +28,7 @@ Map<String, dynamic> _$CityWeatherToJson(CityWeather instance) =>
       'icon': instance.icon,
       'error': instance.error,
       'enabled': instance.enabled,
+      'selected': instance.selected,
     };
 
 WeatherState _$WeatherStateFromJson(Map<String, dynamic> json) => WeatherState(
@@ -35,6 +37,7 @@ WeatherState _$WeatherStateFromJson(Map<String, dynamic> json) => WeatherState(
           .toList(),
       lastUpdated: DateTime.parse(json['lastUpdated'] as String),
       isLoading: json['isLoading'] as bool,
+      isDeleting: json['isDeleting'] as bool,
     );
 
 Map<String, dynamic> _$WeatherStateToJson(WeatherState instance) =>
@@ -42,4 +45,5 @@ Map<String, dynamic> _$WeatherStateToJson(WeatherState instance) =>
       'cities': instance.cities.map((e) => e.toJson()).toList(),
       'lastUpdated': instance.lastUpdated.toIso8601String(),
       'isLoading': instance.isLoading,
+      'isDeleting': instance.isDeleting,
     };

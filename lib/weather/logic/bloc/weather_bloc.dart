@@ -21,6 +21,13 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
     on<WeatherEventUpdateRequested>((event, emit) => _weatherUpdate(emit));
     on<WeatherEventCityUpdated>((event, emit) => _cityUpdate(emit, event));
     on<WeatherEventCityMoved>((event, emit) => _cityMoved(emit, event));
+    on<WeatherEventDeletionSelect>(
+        (event, emit) => _deletionSelect(emit, event));
+    on<WeatherEventCitySelected>((event, emit) => _citySelected(emit, event));
+    on<WeatherEventDeletionCancelled>(
+        (event, emit) => _deletionCancelled(emit, event));
+    on<WeatherEventDeletionSubmitted>(
+        (event, emit) => _deletionSubmitted(emit, event));
     add(WeatherEventStartup());
   }
 
@@ -45,7 +52,11 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
             .fetchCurrentWeather(cityWeather.fullLocation)
             .then((currentWeather) {
           updates.add(CityWeather.fromCurrentWeatherVO(
-              cityWeather.fullLocation, currentWeather));
+            cityWeather.fullLocation,
+            cityWeather.enabled,
+            cityWeather.selected,
+            currentWeather,
+          ));
         }).onError((error, stackTrace) {
           print("Error on weather update");
           updates.add(cityWeather.copyWith(
@@ -58,7 +69,7 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
     print("Weather update finished");
   }
 
-  _cityUpdate(Emitter<WeatherState> emit, WeatherEventCityUpdated event) {
+  void _cityUpdate(Emitter<WeatherState> emit, WeatherEventCityUpdated event) {
     if (event.index < 0) {
       _cityAddNew(emit, event);
     } else {
@@ -67,7 +78,7 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
     add(WeatherEventUpdateRequested());
   }
 
-  _cityUpdateExisting(
+  void _cityUpdateExisting(
       Emitter<WeatherState> emit, WeatherEventCityUpdated event) {
     print(
         'Updating city: ${state.cities.elementAt(event.index)} -> ${event.fullLocation}');
@@ -85,7 +96,7 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
     emit(state.copyWith(cities: updated));
   }
 
-  _cityAddNew(Emitter<WeatherState> emit, WeatherEventCityUpdated event) {
+  void _cityAddNew(Emitter<WeatherState> emit, WeatherEventCityUpdated event) {
     print('Adding new city: ${event.fullLocation}');
     final updated = List<CityWeather>.from(state.cities);
     updated.add(CityWeather.initial()
@@ -100,7 +111,7 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
   @override
   Map<String, dynamic>? toJson(WeatherState state) => state.toJson();
 
-  _cityMoved(Emitter<WeatherState> emit, WeatherEventCityMoved event) {
+  void _cityMoved(Emitter<WeatherState> emit, WeatherEventCityMoved event) {
     print('Moving city from ${event.oldIndex} to ${event.newIndex}');
 
     // Check if we need index correction due to strange behaviour of the widget
@@ -118,5 +129,48 @@ class WeatherBloc extends HydratedBloc<WeatherEvent, WeatherState> {
     final element = newList.removeAt(oldIndex);
     newList.insert(newIndex, element);
     return newList;
+  }
+
+  void _deletionSelect(
+      Emitter<WeatherState> emit, WeatherEventDeletionSelect event) {
+    emit(state.copyWith(
+      isDeleting: true,
+      cities: _setIsSelected(state.cities, false),
+    ));
+  }
+
+  List<CityWeather> _setIsSelected(List<CityWeather> cities, bool isSelected) {
+    return cities
+        .map((e) => e.copyWith(selected: isSelected))
+        .toList(growable: false);
+  }
+
+  void _citySelected(
+      Emitter<WeatherState> emit, WeatherEventCitySelected event) {
+    print('City ${event.index}, new selection status: ${event.selected}');
+    final newList = List.of(state.cities);
+    final city =
+        newList.removeAt(event.index).copyWith(selected: event.selected);
+    newList.insert(event.index, city);
+    emit(state.copyWith(cities: newList));
+  }
+
+  void _deletionCancelled(
+      Emitter<WeatherState> emit, WeatherEventDeletionCancelled event) {
+    emit(state.copyWith(
+      isDeleting: false,
+      cities: _setIsSelected(state.cities, false),
+    ));
+  }
+
+  void _deletionSubmitted(
+      Emitter<WeatherState> emit, WeatherEventDeletionSubmitted event) {
+    final newList = state.cities
+        .where((element) => !element.selected)
+        .toList(growable: false);
+    emit(state.copyWith(
+      isDeleting: false,
+      cities: newList,
+    ));
   }
 }

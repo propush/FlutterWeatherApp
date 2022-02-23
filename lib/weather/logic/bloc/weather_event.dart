@@ -38,3 +38,22 @@ class WeatherEventCityMoved extends WeatherEvent {
   @override
   List<Object> get props => [oldIndex, newIndex];
 }
+
+class WeatherEventDeletionSelect extends WeatherEvent {}
+
+class WeatherEventDeletionCancelled extends WeatherEvent {}
+
+class WeatherEventDeletionSubmitted extends WeatherEvent {}
+
+class WeatherEventCitySelected extends WeatherEvent {
+  final int index;
+  final bool selected;
+
+  const WeatherEventCitySelected({
+    required this.index,
+    required this.selected,
+  });
+
+  @override
+  List<Object> get props => [index, selected];
+}

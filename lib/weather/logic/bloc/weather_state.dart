@@ -10,6 +10,7 @@ class CityWeather extends Equatable {
   final String icon;
   final String error;
   final bool enabled;
+  final bool selected;
 
   @override
   List<Object> get props => [
@@ -20,21 +21,28 @@ class CityWeather extends Equatable {
         wind,
         icon,
         error,
-        enabled
+        enabled,
+        selected,
       ];
 
-  const CityWeather(
-      {required this.fullLocation,
-      required this.cityName,
-      required this.temperature,
-      required this.conditions,
-      required this.wind,
-      required this.icon,
-      required this.error,
-      this.enabled = true});
+  const CityWeather({
+    required this.fullLocation,
+    required this.cityName,
+    required this.temperature,
+    required this.conditions,
+    required this.wind,
+    required this.icon,
+    required this.error,
+    this.enabled = true,
+    this.selected = false,
+  });
 
   factory CityWeather.fromCurrentWeatherVO(
-          String fullLocation, CurrentWeatherVO currentWeather) =>
+    String fullLocation,
+    bool enabled,
+    bool selected,
+    CurrentWeatherVO currentWeather,
+  ) =>
       CityWeather(
         fullLocation: fullLocation,
         cityName: currentWeather.name,
@@ -43,6 +51,8 @@ class CityWeather extends Equatable {
         wind: _getWind(currentWeather.wind.speed),
         icon: _getIcon(currentWeather.weatherList),
         error: '',
+        enabled: enabled,
+        selected: selected,
       );
 
   factory CityWeather.initial() => const CityWeather(
@@ -88,6 +98,11 @@ class CityWeather extends Equatable {
     }
   }
 
+  factory CityWeather.fromJson(Map<String, dynamic> json) =>
+      _$CityWeatherFromJson(json);
+
+  Map<String, dynamic> toJson() => _$CityWeatherToJson(this);
+
   CityWeather copyWith({
     String? fullLocation,
     String? cityName,
@@ -97,6 +112,7 @@ class CityWeather extends Equatable {
     String? icon,
     String? error,
     bool? enabled,
+    bool? selected,
   }) {
     return CityWeather(
       fullLocation: fullLocation ?? this.fullLocation,
@@ -107,13 +123,9 @@ class CityWeather extends Equatable {
       icon: icon ?? this.icon,
       error: error ?? this.error,
       enabled: enabled ?? this.enabled,
+      selected: selected ?? this.selected,
     );
   }
-
-  factory CityWeather.fromJson(Map<String, dynamic> json) =>
-      _$CityWeatherFromJson(json);
-
-  Map<String, dynamic> toJson() => _$CityWeatherToJson(this);
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -121,31 +133,36 @@ class WeatherState extends Equatable {
   final List<CityWeather> cities;
   final DateTime lastUpdated;
   final bool isLoading;
+  final bool isDeleting;
 
-  const WeatherState(
-      {required this.cities,
-      required this.lastUpdated,
-      required this.isLoading});
+  const WeatherState({
+    required this.cities,
+    required this.lastUpdated,
+    required this.isLoading,
+    required this.isDeleting,
+  });
 
   @override
-  List<Object> get props => [cities, lastUpdated, isLoading];
-
-  WeatherState copyWith({
-    List<CityWeather>? cities,
-    DateTime? lastUpdated,
-    bool? isLoading,
-  }) {
-    return WeatherState(
-      cities: cities ?? this.cities,
-      lastUpdated: lastUpdated ?? this.lastUpdated,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
+  List<Object> get props => [cities, lastUpdated, isLoading, isDeleting];
 
   factory WeatherState.fromJson(Map<String, dynamic> json) =>
       _$WeatherStateFromJson(json);
 
   Map<String, dynamic> toJson() => _$WeatherStateToJson(this);
+
+  WeatherState copyWith({
+    List<CityWeather>? cities,
+    DateTime? lastUpdated,
+    bool? isLoading,
+    bool? isDeleting,
+  }) {
+    return WeatherState(
+      cities: cities ?? this.cities,
+      lastUpdated: lastUpdated ?? this.lastUpdated,
+      isLoading: isLoading ?? this.isLoading,
+      isDeleting: isDeleting ?? this.isDeleting,
+    );
+  }
 }
 
 class WeatherInitial extends WeatherState {
@@ -154,5 +171,6 @@ class WeatherInitial extends WeatherState {
           cities: List.from([CityWeather.initial()]),
           lastUpdated: DateTime.fromMicrosecondsSinceEpoch(0),
           isLoading: false,
+          isDeleting: false,
         );
 }

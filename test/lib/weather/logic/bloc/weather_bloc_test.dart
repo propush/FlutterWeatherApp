@@ -118,6 +118,57 @@ void main() {
             ['Moscow,ru,Moscow', 'City 3', 'City 2', 'City 4']),
       ],
     );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'Select cities',
+      setUp: () async => _weatherBloc = await _getWeatherBloc(
+          _weatherRepository,
+          storage: _MockStorageWeatherRecentlyUpdated()),
+      build: () => _weatherBloc,
+      act: (bloc) => bloc
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 2', cityName: 'City 2', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 3', cityName: 'City 3', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 4', cityName: 'City 4', index: -1))
+        ..add(const WeatherEventCitySelected(index: 1, selected: true))
+        ..add(const WeatherEventCitySelected(index: 3, selected: true)),
+      skip: 8,
+      expect: () => [
+        isA<WeatherState>().having(
+            (state) =>
+                state.cities.map((e) => e.selected).toList(growable: false),
+            'Selected',
+            [false, true, false, true]),
+      ],
+    );
+
+    blocTest<WeatherBloc, WeatherState>(
+      'Delete cities',
+      setUp: () async => _weatherBloc = await _getWeatherBloc(
+          _weatherRepository,
+          storage: _MockStorageWeatherRecentlyUpdated()),
+      build: () => _weatherBloc,
+      act: (bloc) => bloc
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 2', cityName: 'City 2', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 3', cityName: 'City 3', index: -1))
+        ..add(const WeatherEventCityUpdated(
+            fullLocation: 'City 4', cityName: 'City 4', index: -1))
+        ..add(const WeatherEventCitySelected(index: 1, selected: true))
+        ..add(const WeatherEventCitySelected(index: 3, selected: true))
+        ..add(WeatherEventDeletionSubmitted()),
+      skip: 10,
+      expect: () => [
+        isA<WeatherState>().having(
+            (state) =>
+                state.cities.map((e) => e.fullLocation).toList(growable: false),
+            'Full locations',
+            ['Moscow,ru,Moscow', 'City 3']),
+      ],
+    );
   });
 }
 
