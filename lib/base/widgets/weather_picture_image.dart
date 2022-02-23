@@ -11,9 +11,13 @@ class WeatherPictureImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CachedNetworkImage(
-      placeholder: (context, url) => const CircularProgressIndicator(),
-      imageUrl: '$imageUrl$cityWeatherIcon$imageExt',
-    );
+    if (cityWeatherIcon.isEmpty) {
+      return const Icon(Icons.cancel);
+    } else {
+      return CachedNetworkImage(
+        placeholder: (context, url) => const CircularProgressIndicator(),
+        imageUrl: '$imageUrl$cityWeatherIcon$imageExt',
+      );
+    }
   }
 }

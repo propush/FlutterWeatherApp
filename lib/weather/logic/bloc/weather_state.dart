@@ -51,7 +51,7 @@ class CityWeather extends Equatable {
         temperature: 'N/D',
         conditions: 'N/D',
         wind: 'N/D',
-        icon: 'N/D',
+        icon: '',
         error: 'Waiting for initialization...',
       );
 
